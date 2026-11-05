@@ -1,0 +1,426 @@
+{%- comment -%}
+  STEADY 翻書介紹區塊
+  - 背景：會轉的「節點球」，光點沿著線跑來跑去
+  - 中間：一本立體的書，客人點箭頭或左右滑動就翻頁
+  - 左上：STEADY Guide（小編）用一句話介紹每一頁
+  商品已上架時自動抓 Shopify 的名稱、價格、照片；還沒上架時用區塊裡填好的文字。
+{%- endcomment -%}
+
+{%- liquid
+  assign sid = 'sfb-' | append: section.id
+  assign page_count = section.blocks.size | plus: 2
+-%}
+
+<section
+  id="{{ sid }}"
+  class="sfb"
+  style="--sfb-bg: {{ section.settings.bg }}; --sfb-accent: {{ section.settings.accent }}; --sfb-accent-2: {{ section.settings.accent_2 }};"
+  aria-roledescription="carousel"
+  aria-label="{{ section.settings.cover_title | escape }}"
+>
+  <canvas class="sfb-sphere" aria-hidden="true"></canvas>
+
+  <div class="sfb-inner">
+    <div class="sfb-guide">
+      <div class="sfb-orb" aria-hidden="true"><span></span><span></span><span></span></div>
+      <div class="sfb-bubble">
+        <span class="sfb-guide-name">{{ section.settings.guide_name | escape }}</span>
+        <p class="sfb-guide-text" aria-live="polite">{{ section.settings.cover_guide | escape }}</p>
+      </div>
+    </div>
+
+    <div class="sfb-stage">
+      <div class="sfb-book">
+        {%- comment -%} 封面 {%- endcomment -%}
+        <article class="sfb-page sfb-page--cover" data-guide="{{ section.settings.cover_guide | escape }}" aria-label="1 / {{ page_count }}">
+          <div class="sfb-cover">
+            <p class="sfb-eyebrow">{{ section.settings.cover_eyebrow | escape }}</p>
+            <h2 class="sfb-cover-title">{{ section.settings.cover_title | escape }}</h2>
+            <p class="sfb-cover-sub">{{ section.settings.cover_sub | escape }}</p>
+            <span class="sfb-hint">{{ section.settings.hint | escape }} →</span>
+          </div>
+        </article>
+
+        {%- for block in section.blocks -%}
+          {%- liquid
+            assign p = block.settings.product
+            assign live = false
+            if p != blank and p.title != blank
+              assign live = true
+            endif
+            if live
+              assign title = p.title
+              assign price = p.price | money
+              assign img = p.featured_image
+              assign url = p.url
+            else
+              assign title = block.settings.title
+              assign price = block.settings.price
+              assign img = block.settings.image
+              assign url = block.settings.link | default: routes.all_products_collection_url
+            endif
+            assign points = block.settings.points | newline_to_br | split: '<br />'
+            assign n = forloop.index | plus: 1
+          -%}
+          <article class="sfb-page" data-guide="{{ block.settings.guide | escape }}" aria-label="{{ n }} / {{ page_count }}" {{ block.shopify_attributes }}>
+            <div class="sfb-product">
+              <div class="sfb-media">
+                {%- if img != blank -%}
+                  {{ img | image_url: width: 900 | image_tag: loading: 'lazy', alt: title, sizes: '(min-width: 750px) 420px, 80vw', widths: '360, 600, 900' }}
+                {%- else -%}
+                  <svg class="sfb-placeholder" viewBox="0 0 200 200" role="img" aria-label="{{ title | escape }}">
+                    <path d="M78 20h44v70c0 10 6 18 16 24l22 14c14 9 18 26 9 38-7 10-20 13-31 8l-58-28c-12-6-18-17-18-30V20z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/>
+                    <path d="M76 60h46M70 112c22 10 44 20 66 22" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" opacity=".6"/>
+                    <g fill="currentColor" opacity=".7"><circle cx="96" cy="140" r="3"/><circle cx="112" cy="148" r="3"/><circle cx="128" cy="156" r="3"/><circle cx="144" cy="162" r="3"/></g>
+                  </svg>
+                {%- endif -%}
+              </div>
+              <div class="sfb-info">
+                <p class="sfb-eyebrow">{{ n | minus: 1 }} / {{ section.blocks.size }}</p>
+                <h3 class="sfb-title">{{ title | escape }}</h3>
+                {%- if price != blank -%}<p class="sfb-price">{{ price }}</p>{%- endif -%}
+                <ul class="sfb-points">
+                  {%- for pt in points -%}
+                    {%- assign t = pt | strip -%}
+                    {%- if t != blank -%}<li>{{ t | escape }}</li>{%- endif -%}
+                  {%- endfor -%}
+                </ul>
+                <a class="sfb-btn" href="{{ url }}">{{ section.settings.product_button | escape }}</a>
+              </div>
+            </div>
+          </article>
+        {%- endfor -%}
+
+        {%- comment -%} 最後一頁 {%- endcomment -%}
+        <article class="sfb-page sfb-page--end" data-guide="{{ section.settings.end_guide | escape }}" aria-label="{{ page_count }} / {{ page_count }}">
+          <div class="sfb-cover">
+            <p class="sfb-eyebrow">{{ section.settings.end_eyebrow | escape }}</p>
+            <h2 class="sfb-cover-title">{{ section.settings.end_title | escape }}</h2>
+            <ul class="sfb-points sfb-points--center">
+              {%- assign end_points = section.settings.end_points | newline_to_br | split: '<br />' -%}
+              {%- for pt in end_points -%}
+                {%- assign t = pt | strip -%}
+                {%- if t != blank -%}<li>{{ t | escape }}</li>{%- endif -%}
+              {%- endfor -%}
+            </ul>
+            <a class="sfb-btn" href="{{ routes.all_products_collection_url }}">{{ section.settings.end_button | escape }}</a>
+          </div>
+        </article>
+      </div>
+    </div>
+
+    <div class="sfb-nav">
+      <button type="button" class="sfb-arrow sfb-prev" aria-label="Previous page">‹</button>
+      <div class="sfb-dots" aria-hidden="true"></div>
+      <button type="button" class="sfb-arrow sfb-next" aria-label="Next page">›</button>
+    </div>
+  </div>
+</section>
+
+<style>
+  #{{ sid }} {
+    --sfb-ink: #f4f1ea;
+    --sfb-muted: rgba(244, 241, 234, .66);
+    --sfb-paper: #fbf8f2;
+    --sfb-paper-ink: #1d1b18;
+    position: relative;
+    overflow: hidden;
+    background: var(--sfb-bg);
+    color: var(--sfb-ink);
+    padding: clamp(40px, 7vw, 88px) 16px;
+    isolation: isolate;
+  }
+  #{{ sid }} .sfb-sphere { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; }
+  #{{ sid }} .sfb-inner { max-width: 1040px; margin: 0 auto; display: grid; gap: 20px; }
+
+  #{{ sid }} .sfb-guide { display: flex; align-items: flex-start; gap: 12px; max-width: 560px; }
+  #{{ sid }} .sfb-orb { position: relative; flex: 0 0 48px; height: 48px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #fff, var(--sfb-accent) 45%, transparent 72%);
+    box-shadow: 0 0 24px var(--sfb-accent); }
+  #{{ sid }} .sfb-orb span { position: absolute; inset: -6px; border: 1px solid var(--sfb-accent); border-radius: 50%; opacity: .5;
+    animation: sfb-ring 3.2s linear infinite; }
+  #{{ sid }} .sfb-orb span:nth-child(2) { inset: -12px; animation-duration: 4.4s; animation-direction: reverse; border-color: var(--sfb-accent-2); }
+  #{{ sid }} .sfb-orb span:nth-child(3) { inset: 6px; border-style: dashed; animation-duration: 6s; }
+  @keyframes sfb-ring { to { transform: rotate(360deg); } }
+  #{{ sid }} .sfb-bubble { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); backdrop-filter: blur(6px);
+    border-radius: 4px 16px 16px 16px; padding: 10px 14px; min-height: 64px; }
+  #{{ sid }} .sfb-guide-name { display: block; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--sfb-accent); }
+  #{{ sid }} .sfb-guide-text { margin: 4px 0 0; font-size: 15px; line-height: 1.45; }
+
+  #{{ sid }} .sfb-stage { perspective: 1800px; touch-action: pan-y; }
+  #{{ sid }} .sfb-book { position: relative; aspect-ratio: 3 / 4.5; max-width: 420px; margin: 0 auto; transform-style: preserve-3d;
+    transform: rotateX(var(--rx, 6deg)) rotateY(var(--ry, -8deg)); transition: transform .5s ease-out; }
+  #{{ sid }} .sfb-book::before { content: ""; position: absolute; inset: 6px -6px -6px 6px; background: #d9d2c4; border-radius: 4px 14px 14px 4px;
+    transform: translateZ(-14px); box-shadow: 0 30px 60px rgba(0,0,0,.45); }
+  #{{ sid }} .sfb-page { position: absolute; inset: 0; background: var(--sfb-paper); color: var(--sfb-paper-ink); border-radius: 4px 14px 14px 4px;
+    transform-origin: left center; transform-style: preserve-3d; backface-visibility: hidden;
+    transition: transform .9s cubic-bezier(.6,.05,.25,1), opacity .9s ease; overflow: hidden;
+    box-shadow: inset 14px 0 18px -12px rgba(0,0,0,.35); }
+  #{{ sid }} .sfb-page.is-flipped { transform: rotateY(-178deg); opacity: 0; pointer-events: none; }
+  #{{ sid }} .sfb-page.is-flipped.is-turning { opacity: 1; }
+  #{{ sid }} .sfb-page[aria-hidden="true"]:not(.is-flipped) { pointer-events: none; }
+
+  #{{ sid }} .sfb-cover { height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 12px; padding: 28px;
+    background: radial-gradient(120% 80% at 50% 0%, #fff 0%, var(--sfb-paper) 60%); }
+  #{{ sid }} .sfb-page--cover .sfb-cover { background: linear-gradient(160deg, #1d1b18, #3a342c); color: var(--sfb-ink); }
+  #{{ sid }} .sfb-eyebrow { margin: 0; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; opacity: .7; }
+  #{{ sid }} .sfb-cover-title { margin: 0; font-size: clamp(30px, 6vw, 44px); line-height: 1.05; }
+  #{{ sid }} .sfb-cover-sub { margin: 0; max-width: 28ch; line-height: 1.45; opacity: .85; }
+  #{{ sid }} .sfb-hint { margin-top: 12px; font-size: 13px; color: var(--sfb-accent); animation: sfb-nudge 1.6s ease-in-out infinite; }
+  @keyframes sfb-nudge { 50% { transform: translateX(6px); } }
+
+  #{{ sid }} .sfb-product { height: 100%; display: grid; grid-template-rows: 44% 1fr; }
+  #{{ sid }} .sfb-media { background: #efe9de; display: grid; place-items: center; overflow: hidden; }
+  #{{ sid }} .sfb-media img { width: 100%; height: 100%; object-fit: contain; padding: 12px; box-sizing: border-box; }
+  #{{ sid }} .sfb-placeholder { width: 46%; color: #8a7f6d; }
+  #{{ sid }} .sfb-info { padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 6px; min-height: 0; }
+  #{{ sid }} .sfb-title { margin: 0; font-size: 19px; line-height: 1.2; }
+  #{{ sid }} .sfb-price { margin: 0; font-weight: 600; }
+  #{{ sid }} .sfb-points { margin: 2px 0 0; padding-left: 18px; font-size: 13.5px; line-height: 1.45; }
+  #{{ sid }} .sfb-points--center { list-style: none; padding: 0; }
+  #{{ sid }} .sfb-btn { margin-top: auto; align-self: flex-start; display: inline-block; padding: 10px 18px; border-radius: 999px;
+    background: var(--sfb-paper-ink); color: var(--sfb-paper); text-decoration: none; font-size: 14px; font-weight: 600; }
+  #{{ sid }} .sfb-cover .sfb-btn { align-self: center; margin-top: 8px; }
+
+  #{{ sid }} .sfb-nav { display: flex; justify-content: center; align-items: center; gap: 16px; }
+  #{{ sid }} .sfb-arrow { width: 48px; height: 48px; border-radius: 50%; border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.06);
+    color: var(--sfb-ink); font-size: 26px; line-height: 1; cursor: pointer; }
+  #{{ sid }} .sfb-arrow:disabled { opacity: .3; cursor: default; }
+  #{{ sid }} .sfb-arrow:focus-visible { outline: 2px solid var(--sfb-accent); outline-offset: 3px; }
+  #{{ sid }} .sfb-dots { display: flex; gap: 8px; }
+  #{{ sid }} .sfb-dots i { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.3); transition: all .3s; }
+  #{{ sid }} .sfb-dots i.on { width: 22px; border-radius: 4px; background: var(--sfb-accent); }
+
+  @media (min-width: 750px) {
+    #{{ sid }} .sfb-book { aspect-ratio: 3 / 4.3; }
+    #{{ sid }} .sfb-product { grid-template-rows: 52% 1fr; }
+    #{{ sid }} .sfb-inner { grid-template-columns: 1fr 1.1fr; grid-template-areas: "guide stage" "nav stage"; align-items: center; }
+    #{{ sid }} .sfb-guide { grid-area: guide; align-self: end; }
+    #{{ sid }} .sfb-stage { grid-area: stage; }
+    #{{ sid }} .sfb-nav { grid-area: nav; justify-content: flex-start; align-self: start; padding-left: 60px; }
+    #{{ sid }} .sfb-guide-text { font-size: 18px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #{{ sid }} .sfb-page, #{{ sid }} .sfb-book { transition: none; }
+    #{{ sid }} .sfb-orb span, #{{ sid }} .sfb-hint { animation: none; }
+  }
+</style>
+
+<script>
+  (function () {
+    var root = document.getElementById('{{ sid }}');
+    if (!root || root.dataset.ready) return;
+    root.dataset.ready = '1';
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    /* ---------- 翻書 ---------- */
+    var book = root.querySelector('.sfb-book');
+    var pages = Array.prototype.slice.call(root.querySelectorAll('.sfb-page'));
+    var prev = root.querySelector('.sfb-prev');
+    var next = root.querySelector('.sfb-next');
+    var dotsBox = root.querySelector('.sfb-dots');
+    var guideText = root.querySelector('.sfb-guide-text');
+    var current = 0;
+    var typing;
+
+    pages.forEach(function () { dotsBox.appendChild(document.createElement('i')); });
+    var dots = dotsBox.children;
+
+    function say(text) {
+      clearInterval(typing);
+      if (reduce) { guideText.textContent = text; return; }
+      var i = 0;
+      guideText.textContent = '';
+      typing = setInterval(function () {
+        i += 2;
+        guideText.textContent = text.slice(0, i);
+        if (i >= text.length) clearInterval(typing);
+      }, 18);
+    }
+
+    function render(sayIt) {
+      pages.forEach(function (p, i) {
+        p.style.zIndex = String(pages.length - i);
+        p.classList.toggle('is-flipped', i < current);
+        p.setAttribute('aria-hidden', i === current ? 'false' : 'true');
+        if (i !== current) p.setAttribute('inert', ''); else p.removeAttribute('inert');
+      });
+      for (var d = 0; d < dots.length; d++) dots[d].classList.toggle('on', d === current);
+      prev.disabled = current === 0;
+      next.disabled = current === pages.length - 1;
+      if (sayIt) say(pages[current].getAttribute('data-guide') || '');
+    }
+
+    function go(to) {
+      if (to < 0 || to >= pages.length || to === current) return;
+      var turning = to > current ? pages[current] : pages[to];
+      turning.classList.add('is-turning');
+      setTimeout(function () { turning.classList.remove('is-turning'); }, 500);
+      current = to;
+      render(true);
+    }
+
+    prev.addEventListener('click', function () { go(current - 1); });
+    next.addEventListener('click', function () { go(current + 1); });
+    root.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight') go(current + 1);
+      if (e.key === 'ArrowLeft') go(current - 1);
+    });
+
+    var stage = root.querySelector('.sfb-stage');
+    var startX = null, startY = null;
+    stage.addEventListener('pointerdown', function (e) { startX = e.clientX; startY = e.clientY; });
+    stage.addEventListener('pointerup', function (e) {
+      if (startX === null) return;
+      var dx = e.clientX - startX, dy = e.clientY - startY;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) go(current + (dx < 0 ? 1 : -1));
+      startX = null;
+    });
+    if (!reduce && window.matchMedia('(hover: hover)').matches) {
+      stage.addEventListener('pointermove', function (e) {
+        var r = stage.getBoundingClientRect();
+        var x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
+        book.style.setProperty('--ry', (x * 18 - 4) + 'deg');
+        book.style.setProperty('--rx', (-y * 12 + 4) + 'deg');
+      });
+      stage.addEventListener('pointerleave', function () {
+        book.style.removeProperty('--ry'); book.style.removeProperty('--rx');
+      });
+    }
+    render(false);
+
+    /* ---------- 節點球：光點沿著線跑 ---------- */
+    var canvas = root.querySelector('.sfb-sphere');
+    var ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    var cs = getComputedStyle(root);
+    var c1 = cs.getPropertyValue('--sfb-accent').trim() || '#7fe3d4';
+    var c2 = cs.getPropertyValue('--sfb-accent-2').trim() || '#ffb38a';
+    var W = 0, H = 0, dpr = 1;
+    var N = window.innerWidth < 750 ? 70 : 120;
+    var pts = [], edges = [], pulses = [];
+    var golden = Math.PI * (3 - Math.sqrt(5));
+    for (var i = 0; i < N; i++) {
+      var y = 1 - (i / (N - 1)) * 2, rad = Math.sqrt(1 - y * y), th = golden * i;
+      pts.push([Math.cos(th) * rad, y, Math.sin(th) * rad]);
+    }
+    var seen = {};
+    for (var a = 0; a < N; a++) {
+      var near = [];
+      for (var b = 0; b < N; b++) if (a !== b) {
+        var dx = pts[a][0] - pts[b][0], dy = pts[a][1] - pts[b][1], dz = pts[a][2] - pts[b][2];
+        near.push([dx * dx + dy * dy + dz * dz, b]);
+      }
+      near.sort(function (p, q) { return p[0] - q[0]; });
+      for (var k = 0; k < 3; k++) {
+        var bb = near[k][1], key = a < bb ? a + '-' + bb : bb + '-' + a;
+        if (!seen[key]) { seen[key] = 1; edges.push([a, bb]); }
+      }
+    }
+    function spawn() {
+      pulses.push({ e: edges[(Math.random() * edges.length) | 0], t: 0, v: .006 + Math.random() * .01, c: Math.random() < .5 ? c1 : c2 });
+    }
+    for (var s = 0; s < 18; s++) { spawn(); pulses[s].t = Math.random(); }
+
+    function resize() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = canvas.clientWidth; H = canvas.clientHeight;
+      canvas.width = W * dpr; canvas.height = H * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    var rot = 0, running = false, raf;
+    function proj(p) {
+      var cr = Math.cos(rot), sr = Math.sin(rot), tilt = .35, ct = Math.cos(tilt), st = Math.sin(tilt);
+      var x = p[0] * cr - p[2] * sr, z = p[0] * sr + p[2] * cr;
+      var y = p[1] * ct - z * st; z = p[1] * st + z * ct;
+      var R = W < 750 ? W * .42 : Math.min(W * .2, H * .36), cx = W < 750 ? W * .5 : W * .27, cy = W < 750 ? H * .2 : H * .5;
+      var k = 2.6 / (2.6 + z);
+      return [cx + x * R * k, cy + y * R * k, z];
+    }
+    function frame() {
+      ctx.clearRect(0, 0, W, H);
+      var P = pts.map(proj);
+      ctx.lineWidth = 1;
+      for (var i = 0; i < edges.length; i++) {
+        var A = P[edges[i][0]], B = P[edges[i][1]];
+        ctx.strokeStyle = 'rgba(255,255,255,' + (0.05 + 0.1 * (1 - (A[2] + B[2] + 2) / 4)) + ')';
+        ctx.beginPath(); ctx.moveTo(A[0], A[1]); ctx.lineTo(B[0], B[1]); ctx.stroke();
+      }
+      for (var j = 0; j < P.length; j++) {
+        var f = 1 - (P[j][2] + 1) / 2;
+        ctx.fillStyle = 'rgba(255,255,255,' + (0.25 + 0.6 * f) + ')';
+        ctx.beginPath(); ctx.arc(P[j][0], P[j][1], 1 + 2 * f, 0, 6.283); ctx.fill();
+      }
+      ctx.globalCompositeOperation = 'lighter';
+      for (var q = pulses.length - 1; q >= 0; q--) {
+        var pu = pulses[q], A2 = P[pu.e[0]], B2 = P[pu.e[1]];
+        var x = A2[0] + (B2[0] - A2[0]) * pu.t, y = A2[1] + (B2[1] - A2[1]) * pu.t;
+        var g = ctx.createRadialGradient(x, y, 0, x, y, 10);
+        g.addColorStop(0, pu.c); g.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 10, 0, 6.283); ctx.fill();
+        ctx.strokeStyle = pu.c; ctx.globalAlpha = .55; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(A2[0], A2[1]); ctx.lineTo(x, y); ctx.stroke();
+        ctx.globalAlpha = 1;
+        pu.t += pu.v;
+        if (pu.t >= 1) {
+          var from = pu.e[1], opts = edges.filter(function (e) { return e[0] === from || e[1] === from; });
+          var ne = opts[(Math.random() * opts.length) | 0];
+          pu.e = ne[0] === from ? ne : [ne[1], ne[0]]; pu.t = 0;
+        }
+      }
+      ctx.globalCompositeOperation = 'source-over';
+      rot += .0025;
+      if (running) raf = requestAnimationFrame(frame);
+    }
+    function start() { if (!running && !reduce) { running = true; raf = requestAnimationFrame(frame); } }
+    function stop() { running = false; cancelAnimationFrame(raf); }
+    resize(); frame();
+    window.addEventListener('resize', function () { resize(); if (!running) frame(); });
+    var inView = !('IntersectionObserver' in window);
+    if (!inView) {
+      new IntersectionObserver(function (en) { inView = en[0].isIntersecting; inView ? start() : stop(); }).observe(root);
+    } else { start(); }
+    document.addEventListener('visibilitychange', function () { if (document.hidden) stop(); else if (inView) start(); });
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "STEADY Flipbook",
+  "tag": "div",
+  "class": "steady-flipbook-section",
+  "settings": [
+    { "type": "color", "id": "bg", "label": "Background", "default": "#12151d" },
+    { "type": "color", "id": "accent", "label": "Accent", "default": "#7fe3d4" },
+    { "type": "color", "id": "accent_2", "label": "Accent 2", "default": "#ffb38a" },
+    { "type": "text", "id": "guide_name", "label": "Guide name", "default": "STEADY Guide" },
+    { "type": "text", "id": "cover_eyebrow", "label": "Cover small text", "default": "The STEADY lookbook" },
+    { "type": "text", "id": "cover_title", "label": "Cover title", "default": "Meet STEADY" },
+    { "type": "text", "id": "cover_sub", "label": "Cover subtitle", "default": "Grip socks for Pilates, barre and yoga." },
+    { "type": "text", "id": "hint", "label": "Cover hint", "default": "Swipe or tap the arrow" },
+    { "type": "textarea", "id": "cover_guide", "label": "Guide line on cover", "default": "Hi! I'm the STEADY guide. Tap the arrow or swipe the book and I'll walk you through our socks." },
+    { "type": "text", "id": "product_button", "label": "Product button", "default": "Choose color & size" },
+    { "type": "text", "id": "end_eyebrow", "label": "Last page small text", "default": "Good to know" },
+    { "type": "text", "id": "end_title", "label": "Last page title", "default": "Ready when you are" },
+    { "type": "textarea", "id": "end_points", "label": "Last page lines (one per line)", "default": "US shipping $4.99\nFree shipping on orders $35+" },
+    { "type": "text", "id": "end_button", "label": "Last page button", "default": "Shop all" },
+    { "type": "textarea", "id": "end_guide", "label": "Guide line on last page", "default": "Questions about sizing? Email us anytime at steadygrip.shop@gmail.com and we'll help you pick." }
+  ],
+  "blocks": [
+    {
+      "type": "product_page",
+      "name": "Product page",
+      "settings": [
+        { "type": "product", "id": "product", "label": "Product (used when it's published)" },
+        { "type": "text", "id": "title", "label": "Fallback title" },
+        { "type": "text", "id": "price", "label": "Fallback price" },
+        { "type": "image_picker", "id": "image", "label": "Fallback image" },
+        { "type": "url", "id": "link", "label": "Fallback link" },
+        { "type": "textarea", "id": "points", "label": "Highlights (one per line)" },
+        { "type": "textarea", "id": "guide", "label": "What the guide says on this page" }
+      ]
+    }
+  ],
+  "presets": [{ "name": "STEADY Flipbook" }]
+}
+{% endschema %}

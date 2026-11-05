@@ -1,0 +1,45 @@
+{
+  "steady_flipbook": {
+    "type": "steady-flipbook",
+    "blocks": {
+      "page_stripe": {
+        "type": "product_page",
+        "settings": {
+          "product": "retro-stripe-toe-grip-sock",
+          "title": "Retro Stripe Five-Toe Pilates Grip Socks",
+          "price": "$14.99",
+          "image": "shopify://shop_images/stripe-white-red.png",
+          "points": "Silicone grip dots from toe to heel\nFive separate toes\nRibbed calf-length leg with retro double stripes\n6 colors · Sizes S / M / L",
+          "guide": "This is our classic: calf-length toe socks with a retro double stripe. Pick from 6 colors."
+        }
+      },
+      "page_cross": {
+        "type": "product_page",
+        "settings": {
+          "product": "cross-strap-toe-grip-sock",
+          "title": "Cross-Strap Ballet Five-Toe Pilates Grip Socks",
+          "price": "$14.99",
+          "points": "Ballet-style elastic cross strap over the instep\nSilicone grip sole\nFive separate toes\n7 colors · One size (fits US women 5–9)",
+          "guide": "Love the ballet look? The cross strap keeps these socks in place through your whole class."
+        }
+      },
+      "page_shoe": {
+        "type": "product_page",
+        "settings": {
+          "product": "grip-sock-shoe",
+          "title": "Pilates Grip Sock Shoes",
+          "price": "$29.99",
+          "image": "shopify://shop_images/shoe-sky-blue.png",
+          "points": "Full silicone sole\nStretch knit upper\nQuiet on studio and home floors\n2 colors · Sizes S / M / L",
+          "guide": "Want something sturdier? Our sock shoes last longer than grip socks and stay quiet on the floor."
+        }
+      }
+    },
+    "block_order": [
+      "page_stripe",
+      "page_cross",
+      "page_shoe"
+    ],
+    "settings": {}
+  }
+}
