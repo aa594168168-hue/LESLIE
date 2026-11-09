@@ -2,7 +2,7 @@
 
 規則（與 DESK_RULES.md 一致）：
 - 手續費 0.1425%（買賣各一次），ETF 證交稅 0.1%（賣出），滑點每邊 0.05%。
-- 單筆風險 = 帳戶 5%：股數 = 風險金額 ÷（停損倍數 × ATR），上限為可用現金，不融資。
+- 單筆風險 = 帳戶 2%：股數 = 風險金額 ÷（停損倍數 × ATR），上限為可用現金，不融資。
 - 停損：盤中最低價觸及停損價即出場；跳空開低則以開盤價出場。
 """
 from __future__ import annotations
@@ -40,7 +40,7 @@ def atr(df: pd.DataFrame, n: int = 14) -> pd.Series:
 
 
 def run(frames: dict[str, pd.DataFrame], target: pd.Series, capital: float, *,
-        stop_mult: float = 2.0, risk: float = 0.05, delay: int = 1, costs: Costs | None = None) -> Result:
+        stop_mult: float = 2.0, risk: float = 0.02, delay: int = 1, costs: Costs | None = None) -> Result:
     """target：每個交易日收盤後想持有的代號（或 None）。delay=1 表示下一根開盤成交，2 表示晚一根。"""
     costs = costs or Costs()
     idx = target.index

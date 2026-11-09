@@ -169,7 +169,7 @@ def write_report(day, results, bench, missing, n_trials, universe, cal):
               f"- **論點**：{thesis}",
               f"- **對手盤**：{cp}",
               f"- **參數**：{r['param']} = {r['base']}（滾動前進每年挑選：{r['wf_pick']}）",
-              "- **倉位**：單筆風險 5% ÷（停損倍數 × ATR14），不超過可用現金",
+              "- **倉位**：單筆風險 2% ÷（停損倍數 × ATR14），不超過可用現金",
               f"- **樣本內 vs 樣本外**：夏普 {r['ins']['sharpe']:.2f} → {r['oos']['sharpe']:.2f}；"
               f"年化 {pct(r['ins']['cagr'])} → {pct(r['oos']['cagr'])}；交易 {r['ins']['trades']} → {r['oos']['trades']} 筆；"
               f"勝率 {r['oos']['win_rate'] * 100:.0f}%",

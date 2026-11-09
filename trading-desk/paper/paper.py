@@ -28,7 +28,7 @@ LEDGER = HERE / "ledger.csv"
 JOURNAL = HERE.parent / "journal"
 
 CAPITAL = 200_000
-RISK = 0.05          # 單筆風險（佔該 sleeve 權益）
+RISK = 0.02          # 單筆風險（佔該 sleeve 權益）
 STOP_MULT = 2.0      # 停損 = 進場價 − 2 × ATR14
 VOL_MULT = 1.5
 LIMIT_BUFFER = 0.005  # 限價 = 收盤 × (1 + 0.5%)
