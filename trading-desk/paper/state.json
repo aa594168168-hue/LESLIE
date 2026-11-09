@@ -1,0 +1,15 @@
+{
+ "cash": 200000,
+ "positions": {},
+ "orders": [],
+ "last_run": "2026-11-06",
+ "equity_hist": [
+  [
+   "2026-11-06",
+   200000
+  ]
+ ],
+ "loss_streak": 0,
+ "halted_until": null,
+ "halt_reason": null
+}
