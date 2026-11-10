@@ -19,22 +19,32 @@ START = "2019-01-01"
 
 
 def _get(dataset: str, stock_id: str, start: str = START, refresh: bool = False) -> list[dict]:
+    """有快取就用快取；refresh=True 時只抓快取最後一天往前 7 天起的新資料並合併（省請求額度）。"""
     CACHE.mkdir(exist_ok=True)
     path = CACHE / f"{dataset}_{stock_id}.json"
-    if path.exists() and not refresh:
-        return json.loads(path.read_text())
-    q = urllib.parse.urlencode({"dataset": dataset, "data_id": stock_id, "start_date": start})
+    cached = json.loads(path.read_text()) if path.exists() else None
+    if cached is not None and not refresh:
+        return cached
+    since = start
+    if cached:
+        last = max(r["date"] for r in cached)
+        since = (pd.Timestamp(last) - pd.Timedelta(days=7)).date().isoformat()
+    q = urllib.parse.urlencode({"dataset": dataset, "data_id": stock_id, "start_date": since})
     with urllib.request.urlopen(f"{API}?{q}", timeout=60) as r:
         payload = json.load(r)
     if payload.get("status") != 200:
         raise RuntimeError(f"FinMind {dataset} {stock_id}: {payload.get('msg')}")
-    path.write_text(json.dumps(payload["data"]))
+    rows = {(r["date"], r.get("type", "")): r for r in (cached or [])}
+    rows.update({(r["date"], r.get("type", "")): r for r in payload["data"]})
+    merged = sorted(rows.values(), key=lambda r: r["date"])
+    path.write_text(json.dumps(merged))
     time.sleep(0.5)  # 對免費額度客氣一點
-    return payload["data"]
+    return merged
 
 
-def load(stock_id: str, refresh: bool = False) -> pd.DataFrame:
-    """回傳還原後的 open/high/low/close/volume，以及原始收盤 raw_close。"""
+def load(stock_id: str, refresh: bool = False, refresh_events: bool = False) -> pd.DataFrame:
+    """回傳還原後的 open/high/low/close/volume，以及原始收盤 raw_close。
+    refresh 只更新價格；除息與分割另由 refresh_events 決定（持有中的標的才需要）。"""
     px = pd.DataFrame(_get("TaiwanStockPrice", stock_id, refresh=refresh))
     if px.empty:
         raise RuntimeError(f"{stock_id}: 沒有價格資料")
@@ -48,10 +58,10 @@ def load(stock_id: str, refresh: bool = False) -> pd.DataFrame:
     df["raw_close"] = df["close"]
 
     events = []  # (生效日, 價格比例, 是否為分割)
-    for r in _get("TaiwanStockDividendResult", stock_id, refresh=refresh):
+    for r in _get("TaiwanStockDividendResult", stock_id, refresh=refresh_events):
         if r["before_price"] > 0 and r["after_price"] > 0:
             events.append((pd.Timestamp(r["date"]), r["after_price"] / r["before_price"], False))
-    for r in _get("TaiwanStockSplitPrice", stock_id, refresh=refresh):
+    for r in _get("TaiwanStockSplitPrice", stock_id, refresh=refresh_events):
         if r["before_price"] > 0 and r["after_price"] > 0:
             events.append((pd.Timestamp(r["date"]), r["after_price"] / r["before_price"], True))
 

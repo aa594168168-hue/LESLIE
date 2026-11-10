@@ -105,7 +105,14 @@ def log_trade(row: dict):
 
 def run():
     st = load_state()
-    frames = {s: data.load(s, refresh=True) for s in data.UNIVERSE}
+    try:
+        frames = {s: data.load(s, refresh=True, refresh_events=s in st["positions"]) for s in data.UNIVERSE}
+    except Exception as e:  # 資料源失敗：不下單、不改帳本，只記日誌
+        JOURNAL.mkdir(exist_ok=True)
+        with (JOURNAL / f"{date.today()}.md").open("a") as f:
+            f.write(f"\n## 模擬盤 {date.today()}\n\n- **標的**：—\n- **想法**：—\n"
+                    f"- **證據**：資料下載失敗（{e}）\n- **下一步**：風控：資料過期 → 不下單，稍後重試\n")
+        print(f"資料下載失敗：{e}"); sys.exit(2)
     raw = {s: raw_frame(df) for s, df in frames.items()}
     cal = frames["0050"].index
     today = cal[-1]
