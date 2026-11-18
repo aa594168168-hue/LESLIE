@@ -1,0 +1,38 @@
+//@version=5
+// 策略 A：趨勢＋動量＋量能共振（台股 ETF，日線）
+// 與 trading-desk/paper/paper.py 的規則一致。僅供看圖與提醒，不會自動下單。
+indicator("Leslie 策略A 趨勢量能共振", overlay=true)
+
+volMult  = input.float(1.5, "量能倍數（相對 20 日均量）", step=0.1)
+stopMult = input.float(2.0, "停損倍數（× ATR14）", step=0.5)
+
+sma20  = ta.sma(close, 20)
+sma60  = ta.sma(close, 60)
+volAvg = ta.sma(volume, 20)
+atr14  = ta.atr(14)
+
+newHigh  = close >= ta.highest(close, 20)
+aboveMA  = close > sma60
+volSurge = volume > volMult * volAvg
+
+entry = newHigh and aboveMA and volSurge and barstate.isconfirmed
+exit  = ta.crossunder(close, sma20) and barstate.isconfirmed
+
+// 追蹤目前是否在「持有」狀態，畫出進場時的停損線
+var bool  inPos   = false
+var float stopLvl = na
+if entry and not inPos
+    inPos   := true
+    stopLvl := close - stopMult * atr14
+if inPos and (exit or low <= stopLvl)
+    inPos   := false
+    stopLvl := na
+
+plot(sma20, "20 日線", color=color.new(#1e4d5c, 0), linewidth=1)
+plot(sma60, "60 日線", color=color.new(#d9783a, 0), linewidth=2)
+plot(inPos ? stopLvl : na, "停損", color=color.new(#b3261e, 0), style=plot.style_linebr, linewidth=2)
+plotshape(entry and not inPos[1], "進場訊號", shape.triangleup, location.belowbar, color.new(#1e4d5c, 0), size=size.small, text="A")
+plotshape(exit and inPos[1], "出場訊號", shape.triangledown, location.abovebar, color.new(#b3261e, 0), size=size.small)
+
+alertcondition(entry, "策略A 進場", "{{ticker}} 創20日新高＋站上60日線＋量增：明日限價進場候選")
+alertcondition(exit, "策略A 出場", "{{ticker}} 收盤跌破20日線：明日開盤出場")
